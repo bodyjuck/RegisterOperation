@@ -17,6 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 import bpy
 import re
+import mathutils
 from bpy.props import *
 
 bl_info = {
