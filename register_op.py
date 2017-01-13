@@ -121,7 +121,7 @@ class DskjalRegisterButton(bpy.types.Operator):
         button_name = context.scene.dskjal_button_name
         if len(button_name) == 0:
             button_name = toClassName(op)
-        oldcode = context.scene.dskjal_generated_code[:]
+        oldcode = context.scene.dskjal_generated_code
         context.scene.dskjal_generated_code += generate_button(button_name, op)
         try:
             exec(context.scene.dskjal_generated_code)
