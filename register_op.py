@@ -89,7 +89,9 @@ class DskjalRegisterOpUI(bpy.types.Panel):
 
     def draw(self, context):
         l = self.layout.column()
-        l.operator("dskjal.restorebutton")
+        row = l.row()
+        row.operator("dskjal.clearcachebutton", icon='PANEL_CLOSE', text='')
+        row.operator("dskjal.restorebutton")
         l.separator()
         l.prop(context.scene, 'dskjal_input_string')
         l.prop(context.scene, 'dskjal_button_name')
@@ -118,9 +120,14 @@ class DskjalRegisterButton(bpy.types.Operator):
         button_name = context.scene.dskjal_button_name
         if len(button_name) == 0:
             button_name = toClassName(op)
+        oldcode = context.scene.dskjal_generated_code[:]
         context.scene.dskjal_generated_code += generate_button(toClassName(op) , button_name, op)
-        exec(context.scene.dskjal_generated_code)
-        bpy.utils.register_module(__name__)
+        try:
+            exec(context.scene.dskjal_generated_code)
+            bpy.utils.register_module(__name__)
+        except:
+            context.scene.dskjal_generated_code = oldcode
+            return{'FINISHED'}
 
         if len(context.scene.dskjal_registerd_ops) == 0:
             context.scene.dskjal_registerd_ops += toOperatorCommand(op)
@@ -140,6 +147,15 @@ class DskjalRestoreButton(bpy.types.Operator):
         if len(context.scene.dskjal_generated_code) > 0:
             exec(context.scene.dskjal_generated_code)
             bpy.utils.register_module(__name__)
+        return{'FINISHED'}
+
+class DskjalClearCache(bpy.types.Operator):
+    bl_idname = "dskjal.clearcachebutton"
+    bl_label = "CLEAR ALL"
+  
+    def execute(self, context):
+        context.scene.dskjal_generated_code = ''
+        context.scene.dskjal_registerd_ops = ''
         return{'FINISHED'}
 
 def register():
