@@ -120,7 +120,6 @@ class DskjalRegisterButton(bpy.types.Operator):
             return{'FINISHED'}
 
         if os.path.isfile(op):
-            print('read from file')
             f = open(op)
             op = f.read()
             f.close()
