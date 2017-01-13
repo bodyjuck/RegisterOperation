@@ -18,6 +18,7 @@
 import bpy
 import re
 import mathutils
+import os.path
 from bpy.props import *
 
 bl_info = {
@@ -118,6 +119,16 @@ class DskjalRegisterButton(bpy.types.Operator):
         if len(op) == 0:
             return{'FINISHED'}
 
+        if os.path.isfile(op):
+            print('read from file')
+            f = open(op)
+            op = f.read()
+            f.close()
+
+            #add indent
+            op = op.replace('\n','\n        ')
+            
+
         button_name = context.scene.dskjal_button_name
         if len(button_name) == 0:
             button_name = toClassName(op)
@@ -128,6 +139,7 @@ class DskjalRegisterButton(bpy.types.Operator):
             bpy.utils.register_module(__name__)
         except:
             context.scene.dskjal_generated_code = oldcode
+            print('exec or register failed')
             return{'FINISHED'}
 
         if len(context.scene.dskjal_registerd_ops) == 0:
