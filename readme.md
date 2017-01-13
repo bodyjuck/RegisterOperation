@@ -1,3 +1,3 @@
 #Register Operation
 
-Register any one line python code.
+This script register any one line python code in Blender.
