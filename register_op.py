@@ -35,7 +35,7 @@ bl_info = {
 
 #-----------------------------------helper function------------------------------------------
 def toClassName(name):
-    s = re.sub(r"\.|_|\(|\)|=|'|\"| ", "", name)
+    s = re.sub(r"\.|_|\(|\)|=|'|\"| |-", "", name)
     return s.lower()
 
 def toOperatorName(name):
@@ -61,7 +61,7 @@ class Dskjal%sButton(bpy.types.Operator):
 class Dskjal%sDeleteButton(bpy.types.Operator):
     bl_idname = "%sdelete"
     bl_label = "%sdelete"
-    #
+    
     def execute(self, context):
         context.scene.dskjal_generated_code = re.sub(r"\\"%s\\".+\\"%s\\"", "", context.scene.dskjal_generated_code, flags=re.DOTALL)
         remove = ('%s','%s')
@@ -70,9 +70,9 @@ class Dskjal%sDeleteButton(bpy.types.Operator):
         context.scene.dskjal_registerd_ops = context.scene.dskjal_registerd_ops.replace(',,',',')
         return{'FINISHED'}
 "%s"
-''' % (label, toClassName(label), toOperatorName(label), label, operation,
+''' % (toClassName(label), toClassName(label), toOperatorName(label), label, operation,
        toClassName(label), toOperatorName(label), label,
-       label, label, toOperatorName(label), toDeleteOperatorName(label), toOperatorCommand(label), label)
+       toClassName(label), toClassName(label), toOperatorName(label), toDeleteOperatorName(label), toOperatorCommand(label), toClassName(label))
 
 
 #----------------------------------------------------UI-----------------------------------------------------------
