@@ -19,6 +19,7 @@ import bpy
 import re
 import mathutils
 import os.path
+import uuid
 from bpy.props import *
 from bpy.app.handlers import persistent
 
@@ -38,7 +39,7 @@ bl_info = {
 
 #-----------------------------------helper function------------------------------------------
 def toClassName(name):
-    s = re.sub(r"\.|_|\(|\)|=|'|\"| |-", "", name)
+    s = re.sub(r"\.|_|\(|\)|=|'|\"| |-|~|:|//|\^", "", name)
     return s.lower()
 
 def toOperatorName(name):
@@ -47,10 +48,16 @@ def toOperatorName(name):
 def toDeleteOperatorName(name):
     return toOperatorName(name)+'delete'
 
-def toOperatorCommand(name):
-    return toDeleteOperatorName(name)+'_'+toOperatorName(name)
+def toOperatorCommand(class_name, button_name):
+    return toDeleteOperatorName(class_name)+'_'+toOperatorName(class_name)+'^'+button_name
 
-def generate_button(label, operation):
+def genRandomName(bottonNames):
+    candidate = str(uuid.uuid4())
+    while candidate in bottonNames:
+        candidate = str(uuid.uuid4())
+    return candidate
+    
+def generate_button(name, label, operation):
     return '''
 "%s"
 class Dskjal%sButton(bpy.types.Operator):
@@ -71,11 +78,12 @@ class Dskjal%sDeleteButton(bpy.types.Operator):
         context.scene.dskjal_registerd_ops = context.scene.dskjal_registerd_ops.replace('%s','')
         context.scene.dskjal_registerd_ops = re.sub(r"(,$)|(^,)", "", context.scene.dskjal_registerd_ops)
         context.scene.dskjal_registerd_ops = context.scene.dskjal_registerd_ops.replace(',,',',')
+        print(context.scene.dskjal_registerd_ops)
         return{'FINISHED'}
 "%s"
-''' % (toClassName(label), toClassName(label), toOperatorName(label), label, operation,
-       toClassName(label), toOperatorName(label), label,
-       toClassName(label), toClassName(label), toOperatorName(label), toDeleteOperatorName(label), toOperatorCommand(label), toClassName(label))
+''' % (toClassName(name), toClassName(name), toOperatorName(name), label, operation,
+       toClassName(name), toOperatorName(name), label,
+       toClassName(name), toClassName(name), toOperatorName(name), toDeleteOperatorName(name), toOperatorCommand(name, label), toClassName(name))
 
 
 #----------------------------------------------------UI-----------------------------------------------------------
@@ -106,10 +114,12 @@ class DskjalRegisterOpUI(bpy.types.Panel):
         l.separator()
         tuples = context.scene.dskjal_registerd_ops.split(',')
         for t in tuples:
-            names = t.split('_')
+            button_ids = t.split('_')
             row = l.row()
-            row.operator(names[0], icon='PANEL_CLOSE', text='')
-            row.operator(names[1])
+            row.operator(button_ids[0], icon='PANEL_CLOSE', text='')
+            
+            b = button_ids[1].split('^')
+            row.operator(b[0], text=b[1])
 
 class DskjalRegisterButton(bpy.types.Operator):
     bl_idname = "dskjal.registerbutton"
@@ -131,9 +141,11 @@ class DskjalRegisterButton(bpy.types.Operator):
 
         button_name = context.scene.dskjal_button_name
         if len(button_name) == 0:
-            button_name = toClassName(op)
+            return{'FINISHED'}
+
         oldcode = context.scene.dskjal_generated_code
-        context.scene.dskjal_generated_code += generate_button(button_name, op)
+        class_name = genRandomName(context.scene.dskjal_registerd_ops)
+        context.scene.dskjal_generated_code += generate_button(class_name, button_name, op)
         try:
             exec(context.scene.dskjal_generated_code)
             bpy.utils.register_module(__name__)
@@ -143,9 +155,9 @@ class DskjalRegisterButton(bpy.types.Operator):
             return{'FINISHED'}
 
         if len(context.scene.dskjal_registerd_ops) == 0:
-            context.scene.dskjal_registerd_ops += toOperatorCommand(button_name)
+            context.scene.dskjal_registerd_ops += toOperatorCommand(class_name, button_name)
         else:
-            context.scene.dskjal_registerd_ops += ',' + toOperatorCommand(button_name)
+            context.scene.dskjal_registerd_ops += ',' + toOperatorCommand(class_name, button_name)
 
         context.scene.dskjal_input_string=''
         context.scene.dskjal_button_name =''
