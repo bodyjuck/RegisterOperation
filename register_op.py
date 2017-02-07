@@ -73,12 +73,12 @@ class Dskjal%sDeleteButton(bpy.types.Operator):
     bl_label = "%sdelete"
     
     def execute(self, context):
-        context.window_manager.dskjal_generated_code = re.sub(r"\\"%s\\".+\\"%s\\"", "", context.window_manager.dskjal_generated_code, flags=re.DOTALL)
+        context.screen.dskjal_generated_code = re.sub(r"\\"%s\\".+\\"%s\\"", "", context.screen.dskjal_generated_code, flags=re.DOTALL)
         remove = ('%s','%s')
-        context.window_manager.dskjal_registerd_ops = context.window_manager.dskjal_registerd_ops.replace('%s','')
-        context.window_manager.dskjal_registerd_ops = re.sub(r"(,$)|(^,)", "", context.window_manager.dskjal_registerd_ops)
-        context.window_manager.dskjal_registerd_ops = context.window_manager.dskjal_registerd_ops.replace(',,',',')
-        print(context.window_manager.dskjal_registerd_ops)
+        context.screen.dskjal_registerd_ops = context.screen.dskjal_registerd_ops.replace('%s','')
+        context.screen.dskjal_registerd_ops = re.sub(r"(,$)|(^,)", "", context.screen.dskjal_registerd_ops)
+        context.screen.dskjal_registerd_ops = context.screen.dskjal_registerd_ops.replace(',,',',')
+        print(context.screen.dskjal_registerd_ops)
         return{'FINISHED'}
 "%s"
 ''' % (toClassName(name), toClassName(name), toOperatorName(name), label, operation,
@@ -93,10 +93,10 @@ class DskjalRegisterOpUI(bpy.types.Panel):
     bl_region_type = "TOOLS"
     bl_category = "Tools"
 
-    bpy.types.WindowManager.dskjal_input_string = bpy.props.StringProperty(name='Operation', default='')
-    bpy.types.WindowManager.dskjal_button_name = bpy.props.StringProperty(name='Name', default='')
-    bpy.types.WindowManager.dskjal_generated_code = bpy.props.StringProperty(name='generated code')
-    bpy.types.WindowManager.dskjal_registerd_ops = bpy.props.StringProperty(name='ops')
+    bpy.types.Screen.dskjal_input_string = bpy.props.StringProperty(name='Operation', default='')
+    bpy.types.Screen.dskjal_button_name = bpy.props.StringProperty(name='Name', default='')
+    bpy.types.Screen.dskjal_generated_code = bpy.props.StringProperty(name='generated code')
+    bpy.types.Screen.dskjal_registerd_ops = bpy.props.StringProperty(name='ops')
 
     def draw(self, context):
         l = self.layout.column()
@@ -104,15 +104,15 @@ class DskjalRegisterOpUI(bpy.types.Panel):
         row.operator("dskjal.clearcachebutton", icon='PANEL_CLOSE', text='')
         row.label('CLEAR ALL')
         l.separator()
-        l.prop(context.window_manager, 'dskjal_input_string')
-        l.prop(context.window_manager, 'dskjal_button_name')
+        l.prop(context.screen, 'dskjal_input_string')
+        l.prop(context.screen, 'dskjal_button_name')
         l.operator("dskjal.registerbutton")
 
-        if len(context.window_manager.dskjal_registerd_ops) == 0:
+        if len(context.screen.dskjal_registerd_ops) == 0:
             return
 
         l.separator()
-        tuples = context.window_manager.dskjal_registerd_ops.split(',')
+        tuples = context.screen.dskjal_registerd_ops.split(',')
         for t in tuples:
             button_ids = t.split('_')
             row = l.row()
@@ -126,7 +126,7 @@ class DskjalRegisterButton(bpy.types.Operator):
     bl_label = "Register operation"
   
     def execute(self, context):
-        op = context.window_manager.dskjal_input_string
+        op = context.screen.dskjal_input_string
         if len(op) == 0:
             return{'FINISHED'}
 
@@ -139,28 +139,28 @@ class DskjalRegisterButton(bpy.types.Operator):
             op = op.replace('\n','\n        ')
             
 
-        button_name = context.window_manager.dskjal_button_name
+        button_name = context.screen.dskjal_button_name
         if len(button_name) == 0:
             return{'FINISHED'}
 
-        oldcode = context.window_manager.dskjal_generated_code
-        class_name = genRandomName(context.window_manager.dskjal_registerd_ops)
-        context.window_manager.dskjal_generated_code += generate_button(class_name, button_name, op)
+        oldcode = context.screen.dskjal_generated_code
+        class_name = genRandomName(context.screen.dskjal_registerd_ops)
+        context.screen.dskjal_generated_code += generate_button(class_name, button_name, op)
         try:
-            exec(context.window_manager.dskjal_generated_code)
+            exec(context.screen.dskjal_generated_code)
             bpy.utils.register_module(__name__)
         except:
-            context.window_manager.dskjal_generated_code = oldcode
+            context.screen.dskjal_generated_code = oldcode
             print('exec or register failed')
             return{'FINISHED'}
 
-        if len(context.window_manager.dskjal_registerd_ops) == 0:
-            context.window_manager.dskjal_registerd_ops += toOperatorCommand(class_name, button_name)
+        if len(context.screen.dskjal_registerd_ops) == 0:
+            context.screen.dskjal_registerd_ops += toOperatorCommand(class_name, button_name)
         else:
-            context.window_manager.dskjal_registerd_ops += ',' + toOperatorCommand(class_name, button_name)
+            context.screen.dskjal_registerd_ops += ',' + toOperatorCommand(class_name, button_name)
 
-        context.window_manager.dskjal_input_string=''
-        context.window_manager.dskjal_button_name =''
+        context.screen.dskjal_input_string=''
+        context.screen.dskjal_button_name =''
 
         return{'FINISHED'}
 
@@ -169,14 +169,14 @@ class DskjalClearCache(bpy.types.Operator):
     bl_label = "CLEAR ALL"
   
     def execute(self, context):
-        context.window_manager.dskjal_generated_code = ''
-        context.window_manager.dskjal_registerd_ops = ''
+        context.screen.dskjal_generated_code = ''
+        context.screen.dskjal_registerd_ops = ''
         return{'FINISHED'}
 
 @persistent
 def load_handler(dummy):
-    if len(bpy.context.window_manager.dskjal_generated_code) > 0:
-        exec(bpy.context.window_manager.dskjal_generated_code)
+    if len(bpy.context.screen.dskjal_generated_code) > 0:
+        exec(bpy.context.screen.dskjal_generated_code)
         bpy.utils.register_module(__name__)
 
 def register():
